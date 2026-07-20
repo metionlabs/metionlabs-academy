@@ -10,6 +10,7 @@ metionlabs 교육용 **example 프로젝트 모음**입니다.
 | 폴더 | 주제 | 스택 |
 |------|------|------|
 | [`spring-boot-dockers`](./spring-boot-dockers) | Spring Boot 애플리케이션을 도커라이즈해서 컨테이너로 띄우기 | Java 25 · Spring Boot 4.1 · Gradle(Kotlin DSL) · Docker |
+| [`spring-data-jpas`](./spring-data-jpas) | Spring Data JPA로 MySQL 다루기 — 연관관계, 트랜잭션, N+1 문제 | Java 25 · Spring Boot 4.1 · JPA · MySQL 8.4 · Testcontainers |
 
 ## 폴더 네이밍 규칙
 
