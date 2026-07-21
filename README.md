@@ -11,6 +11,7 @@ metionlabs 교육용 **example 프로젝트 모음**입니다.
 |------|------|------|
 | [`spring-boot-dockers`](./spring-boot-dockers) | Spring Boot 애플리케이션을 도커라이즈해서 컨테이너로 띄우기 | Java 25 · Spring Boot 4.1 · Gradle(Kotlin DSL) · Docker |
 | [`spring-data-jpas`](./spring-data-jpas) | Spring Data JPA로 MySQL 다루기 — 연관관계, 트랜잭션, N+1 문제 | Java 25 · Spring Boot 4.1 · JPA · MySQL 8.4 · Testcontainers |
+| [`spring-securities`](./spring-securities) | Spring Security + JWT로 인증/인가 — 로그인, 토큰, 역할 기반 권한 | Java 25 · Spring Boot 4.1 · Security · JWT · MySQL 8.4 |
 
 ## 폴더 네이밍 규칙
 

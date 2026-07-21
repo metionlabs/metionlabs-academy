@@ -1,0 +1,80 @@
+# ############################################################################
+# 앱 + MySQL 2개 컨테이너 구성.
+# ----------------------------------------------------------------------------
+# compose 로 DB 를 함께 띄우고, 앱이 DB 준비를 기다리게 하는 구조는
+# spring-data-jpas 예제에 자세히 설명돼 있다. 여기서는 같은 패턴에
+# JWT_SECRET 주입만 추가된다.
+#
+#   docker compose up --build      빌드하고 띄우기
+#   docker compose logs -f app     앱 로그 (SQL·인증 로그 보기)
+#   docker compose down -v         끄고 데이터까지 초기화
+# ############################################################################
+
+services:
+
+  mysql:
+    image: mysql:8.4
+    container_name: academy-security-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: academy_security
+      MYSQL_USER: academy
+      MYSQL_PASSWORD: academy1234
+      TZ: Asia/Seoul
+    command:
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    ports:
+      # 로컬 GUI 툴로 붙어볼 수 있게 열어둔다.
+      # 앞 예제(spring-data-jpas)의 mysql 도 3306 을 쓰므로, 둘을 동시에 띄우려면 충돌한다.
+      # 여기서는 왼쪽(호스트 포트)을 13306 으로 바꿔 충돌을 피했다.
+      # GUI 툴 접속: localhost:13306 / academy / academy1234
+      - "13306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot1234"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+    image: metionlabs-academy/spring-securities:latest
+    container_name: academy-security-app
+    depends_on:
+      mysql:
+        # MySQL 의 healthcheck 가 통과할 때까지 기다렸다가 앱을 띄운다.
+        # (컨테이너 "시작" 과 서비스 "준비 완료" 의 차이 — spring-data-jpas 예제 참고)
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      # DB 접속 (컨테이너 안에서는 호스트가 localhost 가 아니라 서비스 이름 mysql)
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/academy_security?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: academy
+      SPRING_DATASOURCE_PASSWORD: academy1234
+
+      # [보안 핵심] JWT 서명 키를 환경변수로 주입한다.
+      # application.properties 의 학습용 기본값을 덮어쓴다.
+      # 실무에서는 이 값을 시크릿 관리 도구(Vault, AWS Secrets Manager 등)에서 가져온다.
+      # 절대 이 파일에 진짜 운영 키를 적어 git 에 올리지 않는다.
+      JWT_SECRET: docker-compose-demo-secret-please-change-this-32chars-minimum!!
+
+      SPRING_PROFILES_ACTIVE: docker
+      TZ: Asia/Seoul
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl -fs http://localhost:8080/actuator/health/readiness | grep -q UP"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+volumes:
+  mysql-data:
